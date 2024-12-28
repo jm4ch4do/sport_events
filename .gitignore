@@ -172,3 +172,4 @@ cython_debug/
 
 # virtualenv files
 /myenv/
+.env
