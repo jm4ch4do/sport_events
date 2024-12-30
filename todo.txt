@@ -1,5 +1,5 @@
-1. Request games for a given team like the Warriors [DONE]
-2. Filter out old dates, and sort dates by this week, next_week, and later.
+1. Request games for a given team like the Warriors. [DONE]
+2. Filter out old dates, and sort dates by this week, next_week, and later. [DONE]
 3. Have a json file with desired teams listed.
-4. Extend to soccer for Barca and Madrid
-5. Include also mma events
+4. Extend to soccer for Barca and Madrid.
+5. Include also mma events.
