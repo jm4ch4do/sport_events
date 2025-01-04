@@ -1,10 +1,10 @@
 1. Request games for a given team like the Warriors. [DONE]
 2. Filter out old dates, and sort dates by this week, next_week, and later. [DONE]
 3. Have a json file with desired teams listed. [DONE]
-4. Have separate structure for each sport [IN PROGRESS]
-    4.1. Adapt futbol to new json structure [IN PROGRESS]
-    4.2. Have different classes for each sport since they may use different apis and search algorithms
-5. Include also mma events. 
+4. Have separate structure for each sport [DONE]
+    4.1. Adapt football to new json structure [DONE]
+    4.2. Have different classes for each sport since they may use different apis and search algorithms [DONE]
+5. Include also mma events.
 6. Extend to soccer for Barca and Madrid. [REQUIRES DIFFERENT API SINCE API_SPORT_IO ASKS FOR PAID SUBSCRIPTION] 
 7. Have a use_case returning the dates and others producing the report.
 8. Organize events per week instead of per team.

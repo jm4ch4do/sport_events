@@ -2,6 +2,7 @@
   "sport": {
     "nba": {
       "url": "https://v2.nba.api-sports.io/games",
+      "api_key_name": "API_KEY_SPORTS_IO",
       "teams": [
         {
           "id": "warriors",

@@ -4,5 +4,6 @@ import config as _conf
 import services as _serv
 
 _dotenv.load_dotenv()
-conf = _conf.Config()
-_serv.SportsIoNBA(conf=conf)()
+config = _conf.Config()
+nba_service = _serv.SportApiFactory()(config, "nba")
+nba_service()

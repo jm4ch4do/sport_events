@@ -1,23 +1,41 @@
+import abc as _abc
 import datetime as _dt
 import os as _os
 
 import requests as _r
 
+import core as _core
 
-class SportsIoNBA:
 
-    def __init__(self, conf):
+class BaseSportsApi(_abc.ABC):
+    """Base class common for all sport api implementations"""
 
-        nba_data = conf.data["sport"]["nba"]
+    def __init__(self, sport_data):
+        self.url = sport_data["url"]
+        self.teams = sport_data["teams"]
+        self.api_key = _os.getenv(sport_data["api_key_name"])
 
-        # these attributes will go into parent class and only league name will be define here
-        self.api_key = _os.getenv("API_KEY")
-        self.url = nba_data["url"]
-        self.teams = nba_data["teams"]
+    @_abc.abstractmethod
+    def __call__(self, sport_data):
+        pass
 
+
+class ServiceForFootball(BaseSportsApi):
+    def __init__(self):
+        pass
+
+
+class SportsIoMMA(BaseSportsApi):
+    def __init__(self):
+        pass
+
+
+class SportsIoNBA(BaseSportsApi):
+
+    def __init__(self, sport_data):
+        super().__init__(sport_data)
 
     def __call__(self):
-
         headers = {"x-rapidapi-key": _os.getenv("API_KEY")}
         today = _dt.date.today()
 
@@ -27,7 +45,6 @@ class SportsIoNBA:
                 "league": team.get("league"),
                 "season": team.get("season"),
             }
-
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
             one_week_away = _dt.date.today() + _dt.timedelta(weeks=1)
@@ -67,3 +84,21 @@ class SportsIoNBA:
                 print(
                     f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
                 )
+
+
+# class for selecting right class
+class SportApiFactory:
+    """Selects the appropiate service to get sport data"""
+
+    _MAP = {
+        _core.Sports.NBA: SportsIoNBA,
+        _core.Sports.MMA: SportsIoMMA,
+        _core.Sports.FOOTBALL: ServiceForFootball,
+    }
+
+    @classmethod
+    def __call__(cls, config, sport_name):
+        sport = _core.Sports(sport_name)
+        sport_data = config.data["sport"][sport.value]
+        sport_service = cls._MAP[sport]
+        return sport_service(sport_data)
