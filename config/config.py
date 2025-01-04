@@ -8,7 +8,6 @@ class Config:
 
     def __init__(self, file_path: str = "config/config.json"):
         self.data = self._load_data(file_path)
-        self.teams = self.data["teams"]
 
     def _load_data(self, file_path):
         with open(file_path, "r") as file:

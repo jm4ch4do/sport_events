@@ -4,27 +4,31 @@ import os as _os
 import requests as _r
 
 
-class ApiSportsIo:
+class SportsIoNBA:
 
     def __init__(self, conf):
 
+        nba_data = conf.data["sport"]["nba"]
+
+        # these attributes will go into parent class and only league name will be define here
         self.api_key = _os.getenv("API_KEY")
-        self.conf = conf
+        self.url = nba_data["url"]
+        self.teams = nba_data["teams"]
+
 
     def __call__(self):
 
         headers = {"x-rapidapi-key": _os.getenv("API_KEY")}
         today = _dt.date.today()
 
-        for team in self.conf.teams:
-            url = team.get("url")
+        for team in self.teams:
             params = {
                 "team": team.get("team_id"),
                 "league": team.get("league"),
                 "season": team.get("season"),
             }
 
-            response = _r.get(url, params=params, headers=headers)
+            response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
             one_week_away = _dt.date.today() + _dt.timedelta(weeks=1)
             two_weeks_away = _dt.date.today() + _dt.timedelta(weeks=1)

@@ -1,18 +1,21 @@
 {
-  "teams": [
-    {
-      "id": "warriors",
+  "sport": {
+    "nba": {
       "url": "https://v2.nba.api-sports.io/games",
-      "league": "standard",
-      "season": 2024,
-      "team_id": 11
-    },
-    {
-      "id": "boston",
-      "url": "https://v2.nba.api-sports.io/games",
-      "league": "standard",
-      "season": 2024,
-      "team_id": 2
+      "teams": [
+        {
+          "id": "warriors",
+          "league": "standard",
+          "season": 2024,
+          "team_id": 11
+        },
+        {
+          "id": "boston",
+          "league": "standard",
+          "season": 2024,
+          "team_id": 2
+        }
+      ]
     }
-  ]
+  }
 }

@@ -1,1 +1,1 @@
-from .api_sports_io import *
+from .sports_io_nba import *

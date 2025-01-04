@@ -5,4 +5,4 @@ import services as _serv
 
 _dotenv.load_dotenv()
 conf = _conf.Config()
-_serv.ApiSportsIo(conf=conf)()
+_serv.SportsIoNBA(conf=conf)()
