@@ -4,7 +4,7 @@
 4. Have separate structure for each sport [DONE]
     4.1. Adapt football to new json structure [DONE]
     4.2. Have different classes for each sport since they may use different apis and search algorithms [DONE]
-5. Include also mma events.
+5. Include also mma events. [DONE]
 6. Extend to soccer for Barca and Madrid. [REQUIRES DIFFERENT API SINCE API_SPORT_IO ASKS FOR PAID SUBSCRIPTION] 
 7. Have a use_case returning the dates and others producing the report.
 8. Organize events per week instead of per team.

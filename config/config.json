@@ -17,6 +17,16 @@
           "team_id": 2
         }
       ]
+    },
+    "mma": {
+      "url": "https://v1.mma.api-sports.io/fights",
+      "api_key_name": "API_KEY_SPORTS_IO",
+      "teams": [
+        {
+          "id": "all_figths",
+          "season": 2025
+        }
+      ]
     }
   }
 }

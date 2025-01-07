@@ -19,15 +19,90 @@ class BaseSportsApi(_abc.ABC):
     def __call__(self, sport_data):
         pass
 
+    @staticmethod
+    def get_week_dates():
+        today = _dt.date.today()
+        one_week_away = _dt.date.today() + _dt.timedelta(weeks=1)
+        two_weeks_away = _dt.date.today() + _dt.timedelta(weeks=2)
+        return today, one_week_away, two_weeks_away
+
 
 class ServiceForFootball(BaseSportsApi):
+
     def __init__(self):
         pass
 
 
 class SportsIoMMA(BaseSportsApi):
-    def __init__(self):
-        pass
+
+    def __init__(self, sport_data):
+        super().__init__(sport_data)
+
+    def __call__(self):
+        headers = {"x-rapidapi-key": self.api_key}
+        today, one_week_away, two_weeks_away = self.get_week_dates()
+
+        print(
+            f"------------------------------SERVICE MMA------------------------------"
+        )
+
+        for team in self.teams:
+            params = {
+                "season": team.get("season"),
+            }
+            response = _r.get(self.url, params=params, headers=headers)
+            data = response.json()["response"]
+
+            numbered_fights_per_event = {}
+            for fight in data:
+                if self.is_event_numbered(fight["slug"]) and fight["is_main"]:
+                    numbered_fights_per_event.setdefault(fight["slug"], []).append(
+                        fight
+                    )
+
+            event_dates = []
+            for event, details in numbered_fights_per_event.items():
+                date = details[0]["date"].replace("Z", "+00:00")
+                date = _dt.datetime.fromisoformat(date)
+                event_dates.append((date.date(), event))
+            event_dates.sort(key=lambda x: x[0])
+
+            events_this_week, events_next_week, events_later = [], [], []
+            for event in event_dates:
+                date = event[0]
+                if today < date <= one_week_away:
+                    events_this_week.append(event)
+                elif one_week_away < date <= two_weeks_away:
+                    events_next_week.append(event)
+                else:
+                    events_later.append(event)
+
+            print("----------EVENTS THIS WEEK----------")
+            for event_date, event_name in events_this_week:
+                print(
+                    f"{event_name} at {event_date}",
+                    f" ({event_date.strftime("%a").upper()})"
+                )
+
+            print("----------EVENTS NEXT WEEK----------")
+            for event_date, event_name in events_next_week:
+                print(
+                    f"{event_name} at {event_date}",
+                    f" ({event_date.strftime("%a").upper()})"
+                )
+
+            print("----------EVENTS LATER----------")
+            for event_date, event_name in events_later:
+                print(
+                    f"{event_name} at {event_date}",
+                    f" ({event_date.strftime("%a").upper()})"
+                )
+
+    @staticmethod
+    def is_event_numbered(slug):
+        """Returns true for numbered events like UFC 311 (UFC + number)"""
+        company, event = slug.split()[:2]
+        return True if company.lower() == "ufc" and event[:-1].isdigit() else False
 
 
 class SportsIoNBA(BaseSportsApi):
@@ -36,8 +111,12 @@ class SportsIoNBA(BaseSportsApi):
         super().__init__(sport_data)
 
     def __call__(self):
-        headers = {"x-rapidapi-key": _os.getenv("API_KEY")}
-        today = _dt.date.today()
+        headers = {"x-rapidapi-key": self.api_key}
+        today, one_week_away, two_weeks_away = self.get_week_dates()
+
+        print(
+            f"------------------------------SERVICE NBA------------------------------"
+        )
 
         for team in self.teams:
             params = {
@@ -47,8 +126,6 @@ class SportsIoNBA(BaseSportsApi):
             }
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
-            one_week_away = _dt.date.today() + _dt.timedelta(weeks=1)
-            two_weeks_away = _dt.date.today() + _dt.timedelta(weeks=1)
             games_this_week, games_next_week, games_later = [], [], []
             print(f"--------------------TEAM {team.get("id")}--------------------")
             for i, game in enumerate(data):
@@ -86,7 +163,6 @@ class SportsIoNBA(BaseSportsApi):
                 )
 
 
-# class for selecting right class
 class SportApiFactory:
     """Selects the appropiate service to get sport data"""
 
