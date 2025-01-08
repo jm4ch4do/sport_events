@@ -27,6 +27,24 @@
           "season": 2025
         }
       ]
+    },
+    "football": {
+      "url": "https://api-football-v1.p.rapidapi.com/v3/fixtures",
+      "api_key_name": "API_KEY_SPORTS_IO_PAID",
+      "teams": [
+        {
+          "id": "barca",
+          "league": 140,
+          "season": 2024,
+          "team_id": 529
+        },
+        {
+          "id": "real_madrid",
+          "league": 140,
+          "season": 2024,
+          "team_id": 541
+        }
+      ]
     }
   }
 }

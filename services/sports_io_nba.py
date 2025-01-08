@@ -29,8 +29,64 @@ class BaseSportsApi(_abc.ABC):
 
 class ServiceForFootball(BaseSportsApi):
 
-    def __init__(self):
-        pass
+    def __init__(self, sport_data):
+        super().__init__(sport_data)
+
+    def __call__(self):
+        headers = {
+            "x-rapidapi-key": self.api_key,
+            "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
+        }
+        today, one_week_away, two_weeks_away = self.get_week_dates()
+
+        print(
+            f"------------------------------SERVICE FOOTBALL------------------------------"
+        )
+
+        for team in self.teams:
+            params = {
+                "team": team.get("team_id"),
+                "league": team.get("league"),
+                "season": team.get("season"),
+            }
+            response = _r.get(self.url, params=params, headers=headers)
+            data = response.json()["response"]
+            games_this_week, games_next_week, games_later = [], [], []
+
+            print(f"--------------------TEAM {team.get("id")}--------------------")
+            for i, game in enumerate(data):
+                visitors = game["teams"]["away"]["name"]
+                home = game["teams"]["home"]["name"]
+                start = game["fixture"]["date"].replace("Z", "+00:00")
+                start = _dt.datetime.fromisoformat(start)
+                game_info = {"visitors": visitors, "home": home, "start": start}
+                start_date = start.date()
+                if today < start_date <= one_week_away:
+                    games_this_week.append(game_info)
+                elif one_week_away < start_date <= two_weeks_away:
+                    games_next_week.append(game_info)
+                else:
+                    games_later.append(game_info)
+
+            print("----------GAMES THIS WEEK----------")
+            for game_info in games_this_week:
+                print(
+                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
+                    f" ({game_info["start"].strftime("%a").upper()})"
+                )
+
+            print("----------GAMES NEXT WEEK----------")
+            for game_info in games_next_week:
+                print(
+                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
+                    f" ({game_info["start"].strftime("%a").upper()})"
+                )
+
+            print("------------GAMES LATER------------")
+            for game_info in games_later:
+                print(
+                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
+                )
 
 
 class SportsIoMMA(BaseSportsApi):
@@ -81,21 +137,21 @@ class SportsIoMMA(BaseSportsApi):
             for event_date, event_name in events_this_week:
                 print(
                     f"{event_name} at {event_date}",
-                    f" ({event_date.strftime("%a").upper()})"
+                    f" ({event_date.strftime("%a").upper()})",
                 )
 
             print("----------EVENTS NEXT WEEK----------")
             for event_date, event_name in events_next_week:
                 print(
                     f"{event_name} at {event_date}",
-                    f" ({event_date.strftime("%a").upper()})"
+                    f" ({event_date.strftime("%a").upper()})",
                 )
 
             print("----------EVENTS LATER----------")
             for event_date, event_name in events_later:
                 print(
                     f"{event_name} at {event_date}",
-                    f" ({event_date.strftime("%a").upper()})"
+                    f" ({event_date.strftime("%a").upper()})",
                 )
 
     @staticmethod
