@@ -6,11 +6,12 @@
     4.2. Have different classes for each sport since they may use different apis and search algorithms. [DONE]
 5. Include also mma events. [DONE]
 6. Extend to soccer for Barca and Madrid. [DONE] (found paid key that allows 100 requests for free)
-7. Have common variables for all matches. [home vs away at time (dayofweek)]
-8. Make sure datetimes match local timezone.
-9. Central service handler should run all registered services and organize per week.
-10. Have a use_case returning the dates and others producing the report.
-11. Organize events per week instead of per team.
-12. Store resuls in DB and run script daily using task.
-13. Expose endpoints.
-14. Deploy solution online.
+7. Have common variables for all matches. [DONE]
+8. Make sure datetimes match local timezone. [DONE]
+9. Central service handler should run all registered services and organize per week. [NEXT]
+10. Review if time is correct in all sports, split mma code into auxiliar method.
+11. Have a use_case returning the dates and others producing the report.
+12. Organize events per week instead of per team.
+13. Store resuls in DB and run script daily using task.
+14. Expose endpoints.
+15. Deploy solution online.

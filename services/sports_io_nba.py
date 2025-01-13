@@ -1,6 +1,8 @@
 import abc as _abc
 import datetime as _dt
 import os as _os
+import typing as _t
+import zoneinfo as _zi
 
 import requests as _r
 
@@ -27,7 +29,68 @@ class BaseSportsApi(_abc.ABC):
         return today, one_week_away, two_weeks_away
 
 
+class Match:
+    """All services use this class to store match data"""
+
+    def __init__(
+        self,
+        sport: str,
+        home: str,
+        away: str,
+        start: _t.Union[str, _dt.datetime],
+        league: str,
+        details: str = "",
+    ):
+        self.sport = sport
+        self.home = home
+        self.away = away
+        self.start = self.format_date(start)
+        self.league = league
+        self.details = details
+
+        self.date = self.start.date()
+        self.time = f"{self.start.time().hour}:{self.start.time().minute}"
+        self.day_of_week = self.start.strftime("%a").upper()
+
+        now = _dt.datetime.now()
+        now_date, start_date = now.date(), self.start.date()
+        now_weekday, start_weekday = now.weekday(), self.start.weekday()
+        current_week_start = now_date - _dt.timedelta(days=now.weekday())
+        current_week_end = current_week_start + _dt.timedelta(days=6)
+        next_week_start = current_week_end + _dt.timedelta(days=1)
+        next_week_end = current_week_end + _dt.timedelta(days=6)
+
+        self.in_current_week = current_week_start <= start_date <= current_week_end
+        self.in_next_week = next_week_start <= start_date <= next_week_end
+        self.in_next_7_days = now_date <= start_date <= now_date + _dt.timedelta(7)
+        self.in_next_15_days = now_date <= start_date <= now_date + _dt.timedelta(15)
+        self.is_old = now_date > start_date
+
+    def __str__(self) -> str:
+        return f"{self.home} vs {self.away} at {self.start} ({self.day_of_week})"
+
+    @staticmethod
+    def format_date(date: str | _dt.datetime) -> _dt.datetime:
+        """Converts date to expected format"""
+        if isinstance(date, str):
+            date.replace("Z", "+00:00")
+            date = _dt.datetime.fromisoformat(date)
+        local_timezone = _zi.ZoneInfo("America/New_York")
+        return date.astimezone(local_timezone)
+
+    def print_details(self, show_old=False):
+        if self.is_old and show_old:
+            print("--is_old ->", self)
+        elif self.in_current_week:
+            print("--current_week ->", self)
+        elif self.in_next_week:
+            print("--next_week ->", self)
+        else:
+            print("--later ->", self)
+
+
 class ServiceForFootball(BaseSportsApi):
+    """Requests football matches data"""
 
     def __init__(self, sport_data):
         super().__init__(sport_data)
@@ -37,13 +100,13 @@ class ServiceForFootball(BaseSportsApi):
             "x-rapidapi-key": self.api_key,
             "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
         }
-        today, one_week_away, two_weeks_away = self.get_week_dates()
 
         print(
             f"------------------------------SERVICE FOOTBALL------------------------------"
         )
 
         for team in self.teams:
+            print(f"--------------------TEAM {team.get("id")}--------------------")
             params = {
                 "team": team.get("team_id"),
                 "league": team.get("league"),
@@ -51,45 +114,23 @@ class ServiceForFootball(BaseSportsApi):
             }
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
-            games_this_week, games_next_week, games_later = [], [], []
 
-            print(f"--------------------TEAM {team.get("id")}--------------------")
-            for i, game in enumerate(data):
-                visitors = game["teams"]["away"]["name"]
-                home = game["teams"]["home"]["name"]
-                start = game["fixture"]["date"].replace("Z", "+00:00")
-                start = _dt.datetime.fromisoformat(start)
-                game_info = {"visitors": visitors, "home": home, "start": start}
-                start_date = start.date()
-                if today < start_date <= one_week_away:
-                    games_this_week.append(game_info)
-                elif one_week_away < start_date <= two_weeks_away:
-                    games_next_week.append(game_info)
-                else:
-                    games_later.append(game_info)
-
-            print("----------GAMES THIS WEEK----------")
-            for game_info in games_this_week:
-                print(
-                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
-                    f" ({game_info["start"].strftime("%a").upper()})"
+            matches = [
+                Match(
+                    sport="football",
+                    league="La Liga",
+                    home=game["teams"]["home"]["name"],
+                    away=game["teams"]["away"]["name"],
+                    start=game["fixture"]["date"],
                 )
-
-            print("----------GAMES NEXT WEEK----------")
-            for game_info in games_next_week:
-                print(
-                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
-                    f" ({game_info["start"].strftime("%a").upper()})"
-                )
-
-            print("------------GAMES LATER------------")
-            for game_info in games_later:
-                print(
-                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
-                )
+                for game in data
+            ]
+            matches.sort(key=lambda x: x.start)
+            [match.print_details(show_old=True) for match in matches]
 
 
 class SportsIoMMA(BaseSportsApi):
+    """Requests MMA fights data"""
 
     def __init__(self, sport_data):
         super().__init__(sport_data)
@@ -115,44 +156,27 @@ class SportsIoMMA(BaseSportsApi):
                     numbered_fights_per_event.setdefault(fight["slug"], []).append(
                         fight
                     )
-
-            event_dates = []
+            dates_per_event = []
             for event, details in numbered_fights_per_event.items():
-                date = details[0]["date"].replace("Z", "+00:00")
-                date = _dt.datetime.fromisoformat(date)
-                event_dates.append((date.date(), event))
-            event_dates.sort(key=lambda x: x[0])
+                dates_per_event.append((details[0]["date"], event))
 
-            events_this_week, events_next_week, events_later = [], [], []
-            for event in event_dates:
-                date = event[0]
-                if today < date <= one_week_away:
-                    events_this_week.append(event)
-                elif one_week_away < date <= two_weeks_away:
-                    events_next_week.append(event)
+            matches = []
+            for date, slug in dates_per_event:
+                colon_pos, vs_pos = slug.find(":"), slug.find("vs.")
+                missing_data = True if colon_pos == -1 or vs_pos == -1 else False
+                if missing_data:
+                    continue
                 else:
-                    events_later.append(event)
-
-            print("----------EVENTS THIS WEEK----------")
-            for event_date, event_name in events_this_week:
-                print(
-                    f"{event_name} at {event_date}",
-                    f" ({event_date.strftime("%a").upper()})",
-                )
-
-            print("----------EVENTS NEXT WEEK----------")
-            for event_date, event_name in events_next_week:
-                print(
-                    f"{event_name} at {event_date}",
-                    f" ({event_date.strftime("%a").upper()})",
-                )
-
-            print("----------EVENTS LATER----------")
-            for event_date, event_name in events_later:
-                print(
-                    f"{event_name} at {event_date}",
-                    f" ({event_date.strftime("%a").upper()})",
-                )
+                    match = Match(
+                        sport="MMA",
+                        league="UFC",
+                        home=slug[colon_pos + 1 : vs_pos].strip(),
+                        away=slug[vs_pos + 3 :].strip(),
+                        start=date,
+                    )
+                    matches.append(match)
+            matches.sort(key=lambda x: x.start)
+            [match.print_details(show_old=True) for match in matches]
 
     @staticmethod
     def is_event_numbered(slug):
@@ -162,19 +186,20 @@ class SportsIoMMA(BaseSportsApi):
 
 
 class SportsIoNBA(BaseSportsApi):
+    """Requests NBA matches data"""
 
     def __init__(self, sport_data):
         super().__init__(sport_data)
 
     def __call__(self):
         headers = {"x-rapidapi-key": self.api_key}
-        today, one_week_away, two_weeks_away = self.get_week_dates()
 
         print(
             f"------------------------------SERVICE NBA------------------------------"
         )
 
         for team in self.teams:
+            print(f"--------------------TEAM {team.get("id")}--------------------")
             params = {
                 "team": team.get("team_id"),
                 "league": team.get("league"),
@@ -182,41 +207,19 @@ class SportsIoNBA(BaseSportsApi):
             }
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
-            games_this_week, games_next_week, games_later = [], [], []
-            print(f"--------------------TEAM {team.get("id")}--------------------")
-            for i, game in enumerate(data):
-                visitors = game["teams"]["visitors"]["name"]
-                home = game["teams"]["home"]["name"]
-                start = game["date"]["start"].replace("Z", "+00:00")
-                start = _dt.datetime.fromisoformat(start)
-                game_info = {"visitors": visitors, "home": home, "start": start}
-                start_date = start.date()
-                if today < start_date <= one_week_away:
-                    games_this_week.append(game_info)
-                elif one_week_away < start_date <= two_weeks_away:
-                    games_next_week.append(game_info)
-                else:
-                    games_later.append(game_info)
 
-            print("----------GAMES THIS WEEK----------")
-            for game_info in games_this_week:
-                print(
-                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
-                    f" ({game_info["start"].strftime("%a").upper()})"
+            matches = [
+                Match(
+                    sport="basketball",
+                    league="NBA",
+                    home=game["teams"]["home"]["name"],
+                    away=game["teams"]["visitors"]["name"],
+                    start=game["date"]["start"],
                 )
-
-            print("----------GAMES NEXT WEEK----------")
-            for game_info in games_next_week:
-                print(
-                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
-                    f" ({game_info["start"].strftime("%a").upper()})"
-                )
-
-            print("------------GAMES LATER------------")
-            for game_info in games_later:
-                print(
-                    f"{game_info["home"]} vs {game_info["visitors"]} at {game_info["start"]}"
-                )
+                for game in data
+            ]
+            matches.sort(key=lambda x: x.start)
+            [match.print_details(show_old=True) for match in matches]
 
 
 class SportApiFactory:
