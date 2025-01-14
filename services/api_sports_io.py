@@ -150,18 +150,8 @@ class SportsIoMMA(BaseSportsApi):
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
 
-            numbered_fights_per_event = {}
-            for fight in data:
-                if self.is_event_numbered(fight["slug"]) and fight["is_main"]:
-                    numbered_fights_per_event.setdefault(fight["slug"], []).append(
-                        fight
-                    )
-            dates_per_event = []
-            for event, details in numbered_fights_per_event.items():
-                dates_per_event.append((details[0]["date"], event))
-
             matches = []
-            for date, slug in dates_per_event:
+            for date, slug in self._get_dates_per_event(data):
                 colon_pos, vs_pos = slug.find(":"), slug.find("vs.")
                 missing_data = True if colon_pos == -1 or vs_pos == -1 else False
                 if missing_data:
@@ -178,8 +168,21 @@ class SportsIoMMA(BaseSportsApi):
             matches.sort(key=lambda x: x.start)
             [match.print_details(show_old=True) for match in matches]
 
+    @classmethod
+    def _get_dates_per_event(cls, data) -> _t.List[_t.Tuple[str, str]]:
+        """Returns a list (date, slug) for events found in data"""
+
+        numbered_fights_per_event = {}
+        for fight in data:
+            if cls.is_event_numbered(fight["slug"]) and fight["is_main"]:
+                numbered_fights_per_event.setdefault(fight["slug"], []).append(fight)
+        dates_per_event = []
+        for slug, details in numbered_fights_per_event.items():
+            dates_per_event.append((details[0]["date"], slug))
+        return dates_per_event
+
     @staticmethod
-    def is_event_numbered(slug):
+    def is_event_numbered(slug) -> bool:
         """Returns true for numbered events like UFC 311 (UFC + number)"""
         company, event = slug.split()[:2]
         return True if company.lower() == "ufc" and event[:-1].isdigit() else False
