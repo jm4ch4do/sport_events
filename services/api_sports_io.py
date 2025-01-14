@@ -9,7 +9,7 @@ import requests as _r
 import core as _core
 
 
-class BaseSportsApi(_abc.ABC):
+class BaseSportApi(_abc.ABC):
     """Base class common for all sport api implementations"""
 
     def __init__(self, sport_data):
@@ -64,7 +64,32 @@ class Match:
         self.in_next_week = next_week_start <= start_date <= next_week_end
         self.in_next_7_days = now_date <= start_date <= now_date + _dt.timedelta(7)
         self.in_next_15_days = now_date <= start_date <= now_date + _dt.timedelta(15)
+
         self.is_old = now_date > start_date
+        self.is_recent = True if self.in_current_week or self.in_next_week else False
+        self.is_later = start_date > next_week_end
+
+    def meets_time_frame(self, time_frame: str = "all"):
+        """Checks if the match meets the requested time frame
+
+        Args
+            time_frame(str): one of 'old, this week, next_week, later'
+                             also accepts 'recent' = 'this_week' + 'next_week'
+                             and 'all' = 'old' + 'this week' + 'next_week' + 'later'
+        """
+        if time_frame == "all":
+            return True
+        if time_frame == "old":
+            return self.is_old
+        if time_frame == "this_week":
+            return self.in_current_week and not self.is_old
+        if time_frame == "next_week":
+            return self.in_next_week
+        if time_frame == "recent":
+            return (self.in_next_week or self.in_current_week) and not self.is_old
+        if time_frame == "later":
+            return self.is_later
+        return True
 
     def __str__(self) -> str:
         return f"{self.home} vs {self.away} at {self.start} ({self.day_of_week})"
@@ -89,7 +114,7 @@ class Match:
             print("--later ->", self)
 
 
-class ServiceForFootball(BaseSportsApi):
+class RapidApiFootball(BaseSportApi):
     """Requests football matches data"""
 
     def __init__(self, sport_data):
@@ -101,12 +126,8 @@ class ServiceForFootball(BaseSportsApi):
             "x-rapidapi-host": "api-football-v1.p.rapidapi.com",
         }
 
-        print(
-            f"------------------------------SERVICE FOOTBALL------------------------------"
-        )
-
+        matches = []
         for team in self.teams:
-            print(f"--------------------TEAM {team.get("id")}--------------------")
             params = {
                 "team": team.get("team_id"),
                 "league": team.get("league"),
@@ -115,7 +136,7 @@ class ServiceForFootball(BaseSportsApi):
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
 
-            matches = [
+            team_matches = [
                 Match(
                     sport="football",
                     league="La Liga",
@@ -125,11 +146,13 @@ class ServiceForFootball(BaseSportsApi):
                 )
                 for game in data
             ]
-            matches.sort(key=lambda x: x.start)
-            [match.print_details(show_old=True) for match in matches]
+            team_matches.sort(key=lambda x: x.start)
+            matches.extend(team_matches)
+
+        return matches
 
 
-class SportsIoMMA(BaseSportsApi):
+class SportsIoMMA(BaseSportApi):
     """Requests MMA fights data"""
 
     def __init__(self, sport_data):
@@ -139,10 +162,7 @@ class SportsIoMMA(BaseSportsApi):
         headers = {"x-rapidapi-key": self.api_key}
         today, one_week_away, two_weeks_away = self.get_week_dates()
 
-        print(
-            f"------------------------------SERVICE MMA------------------------------"
-        )
-
+        matches = []
         for team in self.teams:
             params = {
                 "season": team.get("season"),
@@ -150,7 +170,7 @@ class SportsIoMMA(BaseSportsApi):
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
 
-            matches = []
+            team_matches = []
             for date, slug in self._get_dates_per_event(data):
                 colon_pos, vs_pos = slug.find(":"), slug.find("vs.")
                 missing_data = True if colon_pos == -1 or vs_pos == -1 else False
@@ -164,14 +184,15 @@ class SportsIoMMA(BaseSportsApi):
                         away=slug[vs_pos + 3 :].strip(),
                         start=date,
                     )
-                    matches.append(match)
-            matches.sort(key=lambda x: x.start)
-            [match.print_details(show_old=True) for match in matches]
+                    team_matches.append(match)
+            team_matches.sort(key=lambda x: x.start)
+            matches.extend(team_matches)
+
+        return matches
 
     @classmethod
     def _get_dates_per_event(cls, data) -> _t.List[_t.Tuple[str, str]]:
         """Returns a list (date, slug) for events found in data"""
-
         numbered_fights_per_event = {}
         for fight in data:
             if cls.is_event_numbered(fight["slug"]) and fight["is_main"]:
@@ -188,7 +209,7 @@ class SportsIoMMA(BaseSportsApi):
         return True if company.lower() == "ufc" and event[:-1].isdigit() else False
 
 
-class SportsIoNBA(BaseSportsApi):
+class SportsIoNBA(BaseSportApi):
     """Requests NBA matches data"""
 
     def __init__(self, sport_data):
@@ -197,12 +218,8 @@ class SportsIoNBA(BaseSportsApi):
     def __call__(self):
         headers = {"x-rapidapi-key": self.api_key}
 
-        print(
-            f"------------------------------SERVICE NBA------------------------------"
-        )
-
+        matches = []
         for team in self.teams:
-            print(f"--------------------TEAM {team.get("id")}--------------------")
             params = {
                 "team": team.get("team_id"),
                 "league": team.get("league"),
@@ -211,7 +228,7 @@ class SportsIoNBA(BaseSportsApi):
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
 
-            matches = [
+            team_matches = [
                 Match(
                     sport="basketball",
                     league="NBA",
@@ -221,8 +238,10 @@ class SportsIoNBA(BaseSportsApi):
                 )
                 for game in data
             ]
-            matches.sort(key=lambda x: x.start)
-            [match.print_details(show_old=True) for match in matches]
+            team_matches.sort(key=lambda x: x.start)
+            matches.extend(team_matches)
+
+        return matches
 
 
 class SportApiFactory:
@@ -231,7 +250,7 @@ class SportApiFactory:
     _MAP = {
         _core.Sports.NBA: SportsIoNBA,
         _core.Sports.MMA: SportsIoMMA,
-        _core.Sports.FOOTBALL: ServiceForFootball,
+        _core.Sports.FOOTBALL: RapidApiFootball,
     }
 
     @classmethod
@@ -240,3 +259,40 @@ class SportApiFactory:
         sport_data = config.data["sport"][sport.value]
         sport_service = cls._MAP[sport]
         return sport_service(sport_data)
+
+
+class AllSportsService:
+    """Handles processed match data from classes that implement BaseSportsApi"""
+
+    def __init__(self, config):
+
+        self.active = ("football", "mma", "nba")  # choose values from Sports enum
+        self.matches = self._get_matches(self.active, config)
+
+    def __call__(self, time_frame: str = "recent"):
+        """Prints information about all sports
+
+        Args
+            time_frame(str): one of 'old, this_week, next_week, later'
+                             also accepts 'recent' = 'this_week' + 'next_week'
+                             and 'all' = 'old' + 'this week' + 'next_week' + 'later'
+        """
+
+        selected_matches = []
+        for match in self.matches:
+            if match.meets_time_frame(time_frame):
+                selected_matches.append(match)
+
+        print(
+            f"-------------------SPORT IN TIME FRAME={time_frame.upper()}----------------------"
+        )
+        selected_matches.sort(key=lambda x: x.start)
+        [match.print_details(show_old=True) for match in selected_matches]
+
+    @staticmethod
+    def _get_matches(active, config):
+        matches = []
+        for sport in active:
+            matches_by_sport = SportApiFactory()(config, sport)()
+            matches.extend(matches_by_sport)
+        return matches

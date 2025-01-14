@@ -8,10 +8,18 @@
 6. Extend to soccer for Barca and Madrid. [DONE] (found paid key that allows 100 requests for free)
 7. Have common variables for all matches. [DONE]
 8. Make sure datetimes match local timezone. [DONE]
-9. Central service handler should run all registered services and organize per week. [NEXT]
+9. Central service handler should run all registered services and organize per week. [DONE]
 10. Review if time is correct in all sports, split mma code into auxiliar method, rename file. [DONE]
-11. Have a use_case returning the dates and others producing the report.
-12. Organize events per week instead of per team.
+11. Do minor improvements [NEXT]
+11. Have a use_case returning the dates and others producing the report. [NEXT]
+12. Organize events per week instead of per team. [DONE]
 13. Store resuls in DB and run script daily using task.
 14. Expose endpoints.
 15. Deploy solution online.
+
+
+
+# Minor Improvements
+# 1. move AllSportsService self.active to config
+# 2. Remove show_old attribute Match.print_details
+# 3. Remove sort from RapidApiFootball and similars
