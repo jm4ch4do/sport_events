@@ -42,10 +42,11 @@ class Match:
         details: str = "",
     ):
         self.sport = sport
+        self.league = league
+        self.sport_abr = "FOT" if self.sport == "football" else self.league
         self.home = home
         self.away = away
         self.start = self.format_date(start)
-        self.league = league
         self.details = details
 
         self.date = self.start.date()
@@ -54,7 +55,6 @@ class Match:
 
         now = _dt.datetime.now()
         now_date, start_date = now.date(), self.start.date()
-        now_weekday, start_weekday = now.weekday(), self.start.weekday()
         current_week_start = now_date - _dt.timedelta(days=now.weekday())
         current_week_end = current_week_start + _dt.timedelta(days=6)
         next_week_start = current_week_end + _dt.timedelta(days=1)
@@ -92,7 +92,7 @@ class Match:
         return True
 
     def __str__(self) -> str:
-        return f"{self.home} vs {self.away} at {self.start} ({self.day_of_week})"
+        return f"{self.home} vs {self.away} at {self.start}"
 
     @staticmethod
     def format_date(date: str | _dt.datetime) -> _dt.datetime:
@@ -103,15 +103,18 @@ class Match:
         local_timezone = _zi.ZoneInfo("America/New_York")
         return date.astimezone(local_timezone)
 
-    def print_details(self, show_old=False):
-        if self.is_old and show_old:
-            print("--is_old ->", self)
-        elif self.in_current_week:
-            print("--current_week ->", self)
-        elif self.in_next_week:
-            print("--next_week ->", self)
-        else:
-            print("--later ->", self)
+    def print_details(self, show_time_label=False):
+        time_label = ""
+        if show_time_label:
+            if self.in_current_week:
+                time_label = "--next"
+            elif self.in_next_week:
+                time_label = "--next_week"
+            elif self.is_old:
+                time_label = "--is_old"
+            else:
+                time_label = "--later ->"
+        print(f"{time_label} {self.day_of_week} -> ", self, f" ({self.sport_abr})")
 
 
 class RapidApiFootball(BaseSportApi):
@@ -135,21 +138,20 @@ class RapidApiFootball(BaseSportApi):
             }
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
-
-            team_matches = [
-                Match(
-                    sport="football",
-                    league="La Liga",
-                    home=game["teams"]["home"]["name"],
-                    away=game["teams"]["away"]["name"],
-                    start=game["fixture"]["date"],
-                )
-                for game in data
-            ]
-            team_matches.sort(key=lambda x: x.start)
+            team_matches = [self._create_match(game) for game in data]
             matches.extend(team_matches)
-
         return matches
+
+    @staticmethod
+    def _create_match(game):
+        """Fits request data to Match object"""
+        return Match(
+            sport="football",
+            league="La Liga",
+            home=game["teams"]["home"]["name"],
+            away=game["teams"]["away"]["name"],
+            start=game["fixture"]["date"],
+        )
 
 
 class SportsIoMMA(BaseSportApi):
@@ -177,18 +179,22 @@ class SportsIoMMA(BaseSportApi):
                 if missing_data:
                     continue
                 else:
-                    match = Match(
-                        sport="MMA",
-                        league="UFC",
-                        home=slug[colon_pos + 1 : vs_pos].strip(),
-                        away=slug[vs_pos + 3 :].strip(),
-                        start=date,
+                    team_matches.append(
+                        self._create_match(slug, colon_pos, vs_pos, date)
                     )
-                    team_matches.append(match)
-            team_matches.sort(key=lambda x: x.start)
             matches.extend(team_matches)
-
         return matches
+
+    @staticmethod
+    def _create_match(slug, colon_pos, vs_pos, date):
+        """Fits request data to Match object"""
+        return Match(
+            sport="MMA",
+            league="UFC",
+            home=slug[colon_pos + 1 : vs_pos].strip(),
+            away=slug[vs_pos + 3 :].strip(),
+            start=date,
+        )
 
     @classmethod
     def _get_dates_per_event(cls, data) -> _t.List[_t.Tuple[str, str]]:
@@ -228,20 +234,20 @@ class SportsIoNBA(BaseSportApi):
             response = _r.get(self.url, params=params, headers=headers)
             data = response.json()["response"]
 
-            team_matches = [
-                Match(
-                    sport="basketball",
-                    league="NBA",
-                    home=game["teams"]["home"]["name"],
-                    away=game["teams"]["visitors"]["name"],
-                    start=game["date"]["start"],
-                )
-                for game in data
-            ]
-            team_matches.sort(key=lambda x: x.start)
+            team_matches = [self._create_match(game) for game in data]
             matches.extend(team_matches)
-
         return matches
+
+    @staticmethod
+    def _create_match(game):
+        """Fits request data to Match object"""
+        return Match(
+            sport="basketball",
+            league="NBA",
+            home=game["teams"]["home"]["name"],
+            away=game["teams"]["visitors"]["name"],
+            start=game["date"]["start"],
+        )
 
 
 class SportApiFactory:
@@ -283,11 +289,9 @@ class AllSportsService:
             if match.meets_time_frame(time_frame):
                 selected_matches.append(match)
 
-        print(
-            f"-------------------SPORT IN TIME FRAME={time_frame.upper()}----------------------"
-        )
+        print(f"-------------------{time_frame.upper()} MATCHES----------------------")
         selected_matches.sort(key=lambda x: x.start)
-        [match.print_details(show_old=True) for match in selected_matches]
+        [match.print_details(show_time_label=True) for match in selected_matches]
 
     @staticmethod
     def _get_matches(active, config):

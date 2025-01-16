@@ -10,7 +10,7 @@
 8. Make sure datetimes match local timezone. [DONE]
 9. Central service handler should run all registered services and organize per week. [DONE]
 10. Review if time is correct in all sports, split mma code into auxiliar method, rename file. [DONE]
-11. Do minor improvements [NEXT]
+11. Do minor improvements [DONE]
 11. Have a use_case returning the dates and others producing the report. [NEXT]
 12. Organize events per week instead of per team. [DONE]
 13. Store resuls in DB and run script daily using task.
@@ -20,6 +20,9 @@
 
 
 # Minor Improvements
-# 1. move AllSportsService self.active to config
-# 2. Remove show_old attribute Match.print_details
-# 3. Remove sort from RapidApiFootball and similars
+# 1. move AllSportsService self.active to config [CANCELLED]
+# 2. Remove show_old attribute Match.print_details [DONE]
+# 3. Remove sort from RapidApiFootball and similars [DONE]
+# 4. New method _create_match [DONE]
+# 5. Also print sport_abr [DONE]
+# 6. Reformat output for better clarity [DONE]
