@@ -103,7 +103,7 @@ class Match:
         local_timezone = _zi.ZoneInfo("America/New_York")
         return date.astimezone(local_timezone)
 
-    def print_details(self, show_time_label=False):
+    def get_match_card(self, show_time_label=False):
         time_label = ""
         if show_time_label:
             if self.in_current_week:
@@ -114,7 +114,7 @@ class Match:
                 time_label = "--is_old"
             else:
                 time_label = "--later ->"
-        print(f"{time_label} {self.day_of_week} -> ", self, f" ({self.sport_abr})")
+        return f"{time_label} {self.day_of_week} -> {self}, ({self.sport_abr})"
 
 
 class RapidApiFootball(BaseSportApi):
@@ -291,12 +291,28 @@ class AllSportsService:
 
         print(f"-------------------{time_frame.upper()} MATCHES----------------------")
         selected_matches.sort(key=lambda x: x.start)
-        [match.print_details(show_time_label=True) for match in selected_matches]
+        match_cards = [
+            match.get_match_card(show_time_label=True) for match in selected_matches
+        ]
+        self._print_cards(match_cards)
 
     @staticmethod
     def _get_matches(active, config):
+        """Gets matches for active teams"""
         matches = []
         for sport in active:
             matches_by_sport = SportApiFactory()(config, sport)()
             matches.extend(matches_by_sport)
         return matches
+
+    @staticmethod
+    def _print_cards(match_cards):
+        """Prints match cards avoiding duplicates
+        Duplicates appear when both home and away teams are selected in config
+        """
+        previous = ""
+        for match_card in match_cards:
+            if match_card == previous:
+                continue
+            previous = match_card
+            print(match_card)
