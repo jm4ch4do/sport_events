@@ -2,11 +2,11 @@ import abc as _abc
 import datetime as _dt
 import os as _os
 import typing as _t
-import zoneinfo as _zi
 
 import requests as _r
 
 import core as _core
+import domain.match as _d_match
 
 
 class BaseSportApi(_abc.ABC):
@@ -27,94 +27,6 @@ class BaseSportApi(_abc.ABC):
         one_week_away = _dt.date.today() + _dt.timedelta(weeks=1)
         two_weeks_away = _dt.date.today() + _dt.timedelta(weeks=2)
         return today, one_week_away, two_weeks_away
-
-
-class Match:
-    """All services use this class to store match data"""
-
-    def __init__(
-        self,
-        sport: str,
-        home: str,
-        away: str,
-        start: _t.Union[str, _dt.datetime],
-        league: str,
-        details: str = "",
-    ):
-        self.sport = sport
-        self.league = league
-        self.sport_abr = "FOT" if self.sport == "football" else self.league
-        self.home = home
-        self.away = away
-        self.start = self.format_date(start)
-        self.details = details
-
-        self.date = self.start.date()
-        self.time = f"{self.start.time().hour}:{self.start.time().minute}"
-        self.day_of_week = self.start.strftime("%a").upper()
-
-        now = _dt.datetime.now()
-        now_date, start_date = now.date(), self.start.date()
-        current_week_start = now_date - _dt.timedelta(days=now.weekday())
-        current_week_end = current_week_start + _dt.timedelta(days=6)
-        next_week_start = current_week_end + _dt.timedelta(days=1)
-        next_week_end = current_week_end + _dt.timedelta(days=6)
-
-        self.in_current_week = current_week_start <= start_date <= current_week_end
-        self.in_next_week = next_week_start <= start_date <= next_week_end
-        self.in_next_7_days = now_date <= start_date <= now_date + _dt.timedelta(7)
-        self.in_next_15_days = now_date <= start_date <= now_date + _dt.timedelta(15)
-
-        self.is_old = now_date > start_date
-        self.is_recent = True if self.in_current_week or self.in_next_week else False
-        self.is_later = start_date > next_week_end
-
-    def meets_time_frame(self, time_frame: str = "all"):
-        """Checks if the match meets the requested time frame
-
-        Args
-            time_frame(str): one of 'old, this week, next_week, later'
-                             also accepts 'recent' = 'this_week' + 'next_week'
-                             and 'all' = 'old' + 'this week' + 'next_week' + 'later'
-        """
-        if time_frame == "all":
-            return True
-        if time_frame == "old":
-            return self.is_old
-        if time_frame == "this_week":
-            return self.in_current_week and not self.is_old
-        if time_frame == "next_week":
-            return self.in_next_week
-        if time_frame == "recent":
-            return (self.in_next_week or self.in_current_week) and not self.is_old
-        if time_frame == "later":
-            return self.is_later
-        return True
-
-    def __str__(self) -> str:
-        return f"{self.home} vs {self.away} at {self.start}"
-
-    @staticmethod
-    def format_date(date: str | _dt.datetime) -> _dt.datetime:
-        """Converts date to expected format"""
-        if isinstance(date, str):
-            date.replace("Z", "+00:00")
-            date = _dt.datetime.fromisoformat(date)
-        local_timezone = _zi.ZoneInfo("America/New_York")
-        return date.astimezone(local_timezone)
-
-    def get_match_card(self, show_time_label=False):
-        time_label = ""
-        if show_time_label:
-            if self.in_current_week:
-                time_label = "--next"
-            elif self.in_next_week:
-                time_label = "--next_week"
-            elif self.is_old:
-                time_label = "--is_old"
-            else:
-                time_label = "--later ->"
-        return f"{time_label} {self.day_of_week} -> {self}, ({self.sport_abr})"
 
 
 class RapidApiFootball(BaseSportApi):
@@ -145,7 +57,7 @@ class RapidApiFootball(BaseSportApi):
     @staticmethod
     def _create_match(game):
         """Fits request data to Match object"""
-        return Match(
+        return _d_match.Match(
             sport="football",
             league="La Liga",
             home=game["teams"]["home"]["name"],
@@ -188,7 +100,7 @@ class SportsIoMMA(BaseSportApi):
     @staticmethod
     def _create_match(slug, colon_pos, vs_pos, date):
         """Fits request data to Match object"""
-        return Match(
+        return _d_match.Match(
             sport="MMA",
             league="UFC",
             home=slug[colon_pos + 1 : vs_pos].strip(),
@@ -241,7 +153,7 @@ class SportsIoNBA(BaseSportApi):
     @staticmethod
     def _create_match(game):
         """Fits request data to Match object"""
-        return Match(
+        return _d_match.Match(
             sport="basketball",
             league="NBA",
             home=game["teams"]["home"]["name"],

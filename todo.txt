@@ -14,7 +14,9 @@
 12. Make sure common games between selected teams show as one [DONE]
 11. Have a use_case returning the dates and others producing the report. [DONE]
 12. Organize events per week instead of per team. [DONE]
-13. Store resuls in DB and run script daily using task.
-14. Expose endpoints.
-15. Require authentication to use endpoints.
-16. Deploy solution online.
+13. Connect to DB [DONE]
+14. Connect domain to core to save received data [NEXT]
+15. Create task to retrieve and store data. [NEXT]
+16. Expose endpoints. [NEXT]
+17. Deploy solution online.
+18. Require authentication to use endpoints.

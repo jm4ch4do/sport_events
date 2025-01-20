@@ -173,3 +173,6 @@ cython_debug/
 # virtualenv files
 /myenv/
 .env
+
+# db files
+sports_events.db
