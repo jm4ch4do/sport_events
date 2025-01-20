@@ -203,10 +203,12 @@ class AllSportsService:
 
         print(f"-------------------{time_frame.upper()} MATCHES----------------------")
         selected_matches.sort(key=lambda x: x.start)
+        selected_matches = self._remove_duplicated_matches(selected_matches)
         match_cards = [
             match.get_match_card(show_time_label=True) for match in selected_matches
         ]
         self._print_cards(match_cards)
+        return selected_matches
 
     @staticmethod
     def _get_matches(active, config):
@@ -228,3 +230,9 @@ class AllSportsService:
                 continue
             previous = match_card
             print(match_card)
+
+    # TODO: implement method
+    @staticmethod
+    def _remove_duplicated_matches(matches):
+        """ "Makes sure there are no duplicated matches were away=home of next match"""
+        return matches

@@ -2,6 +2,8 @@ import datetime as _dt
 import typing as _t
 import zoneinfo as _zi
 
+import core.match as _c_match
+
 
 class Match:
     """All services use this class to store match data"""
@@ -14,7 +16,9 @@ class Match:
         start: _t.Union[str, _dt.datetime],
         league: str,
         details: str = "",
+        id=None,
     ):
+        self.id = id
         self.sport = sport
         self.league = league
         self.sport_abr = "FOT" if self.sport == "football" else self.league
@@ -89,3 +93,34 @@ class Match:
             else:
                 time_label = "--later ->"
         return f"{time_label} {self.day_of_week} -> {self}, ({self.sport_abr})"
+
+    @classmethod
+    def from_entity(cls, entity):
+        """Convert from core Match (SQLAlchemy model) to domain model."""
+        return cls(
+            id=entity.id,
+            sport=entity.sport,
+            league=entity.league,
+            home=entity.home,
+            away=entity.away,
+            start=entity.start,
+            details=entity.details,
+        )
+
+    def to_entity(self):
+        """Convert from domain model to core Match (SQLAlchemy model)."""
+        return _c_match.Match(
+            sport=self.sport,
+            league=self.league,
+            home=self.home,
+            away=self.away,
+            start=self.start,
+            details=self.details,
+        )
+
+    def save(self, db):
+        self.to_entity().save(db)
+
+    @staticmethod
+    def delete_all(db):
+        _c_match.Match.delete_all(db)
