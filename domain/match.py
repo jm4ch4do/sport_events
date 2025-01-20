@@ -81,7 +81,7 @@ class Match:
         local_timezone = _zi.ZoneInfo("America/New_York")
         return date.astimezone(local_timezone)
 
-    def get_match_card(self, show_time_label=False):
+    def get_match_card(self, show_time_label=True):
         time_label = ""
         if show_time_label:
             if self.in_current_week:
@@ -124,3 +124,8 @@ class Match:
     @staticmethod
     def delete_all(db):
         _c_match.Match.delete_all(db)
+
+    @staticmethod
+    def get_all(db):
+        core_matches = _c_match.Match.get_all(db)
+        return [Match.from_entity(match) for match in core_matches]

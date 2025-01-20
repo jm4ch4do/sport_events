@@ -22,6 +22,11 @@ class BaseDB(Base):
         db.query(cls).delete()
         db.commit()
 
+    @classmethod
+    def get_all(cls, db: _alc_orm.Session):
+        """Gets all instances of the model from the database."""
+        return db.query(cls).all()
+
 
 engine = _alc.create_engine(DATABASE_URL, echo=False)
 SessionLocal = _alc_orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)

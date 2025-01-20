@@ -204,10 +204,6 @@ class AllSportsService:
         print(f"-------------------{time_frame.upper()} MATCHES----------------------")
         selected_matches.sort(key=lambda x: x.start)
         selected_matches = self._remove_duplicated_matches(selected_matches)
-        match_cards = [
-            match.get_match_card(show_time_label=True) for match in selected_matches
-        ]
-        self._print_cards(match_cards)
         return selected_matches
 
     @staticmethod
@@ -218,18 +214,6 @@ class AllSportsService:
             matches_by_sport = SportApiFactory()(config, sport)()
             matches.extend(matches_by_sport)
         return matches
-
-    @staticmethod
-    def _print_cards(match_cards):
-        """Prints match cards avoiding duplicates
-        Duplicates appear when both home and away teams are selected in config
-        """
-        previous = ""
-        for match_card in match_cards:
-            if match_card == previous:
-                continue
-            previous = match_card
-            print(match_card)
 
     # TODO: implement method
     @staticmethod
