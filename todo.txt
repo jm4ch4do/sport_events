@@ -17,7 +17,7 @@
 13. Connect to DB [DONE]
 14. Connect domain to core to save received data [DONE]
 15. Read data from DB befoand printing [DONE]
-16. Create task to retrieve and store data. [NEXT]
+16. Have use_cases to retrieve and store data. [DONE]
 17. Expose endpoints. [NEXT]
 18. Deploy solution online.
 19. Require authentication to use endpoints.
