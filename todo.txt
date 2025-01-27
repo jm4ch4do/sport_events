@@ -18,6 +18,8 @@
 14. Connect domain to core to save received data [DONE]
 15. Read data from DB befoand printing [DONE]
 16. Have use_cases to retrieve and store data. [DONE]
-17. Expose endpoints. [NEXT]
-18. Deploy solution online.
-19. Require authentication to use endpoints.
+17. Fix bug, api service changed to paid for nba. [DONE]
+18. Expose endpoints. [NEXT]
+19. Deploy solution online.
+20. Require authentication to use endpoints.
+21. Fix bug, api service changed to paid for mma. [NEXT]

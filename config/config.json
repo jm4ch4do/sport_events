@@ -1,8 +1,8 @@
 {
   "sport": {
     "nba": {
-      "url": "https://v2.nba.api-sports.io/games",
-      "api_key_name": "API_KEY_SPORTS_IO",
+      "url": "https://api-nba-v1.p.rapidapi.com/games",
+      "api_key_name": "API_KEY_SPORTS_IO_PAID_NBA",
       "teams": [
         {
           "id": "warriors",
@@ -30,7 +30,7 @@
     },
     "football": {
       "url": "https://api-football-v1.p.rapidapi.com/v3/fixtures",
-      "api_key_name": "API_KEY_SPORTS_IO_PAID",
+      "api_key_name": "API_KEY_SPORTS_IO_PAID_FOT",
       "teams": [
         {
           "id": "barca",
