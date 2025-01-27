@@ -125,6 +125,21 @@ class Match:
     def delete_all(db):
         _c_match.Match.delete_all(db)
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "away": self.away,
+            "home": self.home,
+            "league": self.league,
+            "sport": self.sport,
+            "start": (
+                self.start.isoformat()
+                if hasattr(self.start, "isoformat")
+                else self.start
+            ),
+            "details": self.details,
+        }
+
     @staticmethod
     def get_all(db):
         core_matches = _c_match.Match.get_all(db)
