@@ -201,7 +201,6 @@ class AllSportsService:
             if match.meets_time_frame(time_frame):
                 selected_matches.append(match)
 
-        print(f"-------------------{time_frame.upper()} MATCHES----------------------")
         selected_matches.sort(key=lambda x: x.start)
         selected_matches = self._remove_duplicated_matches(selected_matches)
         return selected_matches

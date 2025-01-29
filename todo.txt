@@ -20,7 +20,7 @@
 16. Have use_cases to retrieve and store data. [DONE]
 17. Fix bug, api service changed to paid for nba. [DONE]
 18. Expose endpoints. [DONE]
-19. Deploy solution online.
-20. Separate task execution. [NEXT]
-21. Require authentication to use endpoints.
+19. Separate task execution. [DONE]
+20. Require authentication to use endpoints. [NEXT]
+21. Deploy solution online.
 22. Fix bug, api service changed to paid for mma.

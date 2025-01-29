@@ -6,10 +6,6 @@ import config as _conf
 from core import SessionLocal as _db_local
 
 app = _flask.Flask(__name__)
-
-# initial config
-_dotenv.load_dotenv()
-config = _conf.Config()
 db = _db_local()
 
 

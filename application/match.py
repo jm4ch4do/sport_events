@@ -24,6 +24,7 @@ class GetAllMatches:
     def __call__(self, print_cards=False):
         stored_matches = _d_match.Match.get_all(self.db)
         if print_cards:
+            print(f"-------------------MATCHES----------------------")
             match_cards = [match.get_match_card() for match in stored_matches]
             [print(card) for card in match_cards]
         return stored_matches
