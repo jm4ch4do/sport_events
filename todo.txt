@@ -21,6 +21,6 @@
 17. Fix bug, api service changed to paid for nba. [DONE]
 18. Expose endpoints. [DONE]
 19. Separate task execution. [DONE]
-20. Require authentication to use endpoints. [NEXT]
+20. Require authentication to use endpoints. [DONE]
 21. Deploy solution online.
 22. Fix bug, api service changed to paid for mma.

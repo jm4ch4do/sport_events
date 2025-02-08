@@ -3,7 +3,7 @@ from sqlalchemy import orm as _alc_orm
 from sqlalchemy.ext.declarative import declarative_base
 
 DATABASE_URL = "sqlite:///sports_events.db"
-Base = declarative_base()
+Base = _alc_orm.declarative_base()
 
 
 class BaseDB(Base):
