@@ -4,11 +4,13 @@ import os as _os
 from core import SessionLocal as _db_local
 from . import auth as _auth
 import application as _app
+import config as _conf
 
 
 app = _flask.Flask(__name__)
 app.config["SECRET_KEY"] = _os.getenv("SECRET_KEY")
 db = _db_local()
+config = _conf.Config()
 
 
 @app.route("/login", methods=["POST"])
@@ -26,6 +28,12 @@ def health_check():
 def get_matches():
     matches = _app.GetAllMatches(db)(print_cards=False)
     return _flask.jsonify({"response": [match.to_dict() for match in matches]})
+
+
+@app.route("/create_matches", methods=["GET"])
+def create_matches():
+    _app.CreateMatches(db, config)()
+    return _flask.jsonify({"status": "OK", "message": "Matches Created"})
 
 
 if __name__ == "__main__":
