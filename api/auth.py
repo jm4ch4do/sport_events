@@ -5,19 +5,13 @@ import os as _os
 import flask as _flask
 import jwt as _jwt
 
-from core import SessionLocal as _db_local
-
-app = _flask.Flask(__name__)
-app.config["SECRET_KEY"] = _os.getenv("SECRET_KEY")
-db = _db_local()
-
 
 def generate_token(username):
     payload = {
         "user": username,
         "exp": _dt.datetime.now(_dt.UTC) + _dt.timedelta(hours=1),
     }
-    return _jwt.encode(payload, app.config["SECRET_KEY"], algorithm="HS256")
+    return _jwt.encode(payload, _os.getenv("SECRET_KEY"), algorithm="HS256")
 
 
 def require_token(f):
@@ -28,7 +22,7 @@ def require_token(f):
             return _flask.jsonify({"message": "Token required"}), 401
         try:
             decoded_token = _jwt.decode(
-                token.split(" ")[1], app.config["SECRET_KEY"], algorithms=["HS256"]
+                token.split(" ")[1], _os.getenv("SECRET_KEY"), algorithms=["HS256"]
             )
         except _jwt.ExpiredSignatureError:
             return _flask.jsonify({"message": "Token expired"}), 401

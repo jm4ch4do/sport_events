@@ -1,12 +1,14 @@
+import os as _os
 
 import flask as _flask
-import os as _os
-from core import SessionLocal as _db_local
-from . import auth as _auth
-import application as _app
+
+import application as _appl
 import config as _conf
+from core import SessionLocal as _db_local
 
+from . import auth as _auth
 
+# we should have a common place where app is created only once, maybe in __init__
 app = _flask.Flask(__name__)
 app.config["SECRET_KEY"] = _os.getenv("SECRET_KEY")
 db = _db_local()
@@ -26,13 +28,13 @@ def health_check():
 @app.route("/matches", methods=["GET"])
 @_auth.require_token
 def get_matches():
-    matches = _app.GetAllMatches(db)(print_cards=False)
+    matches = _appl.GetAllMatches(db)(print_cards=False)
     return _flask.jsonify({"response": [match.to_dict() for match in matches]})
 
 
 @app.route("/create_matches", methods=["GET"])
 def create_matches():
-    _app.CreateMatches(db, config)()
+    _appl.CreateMatches(db, config)()
     return _flask.jsonify({"status": "OK", "message": "Matches Created"})
 
 
