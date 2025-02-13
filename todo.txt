@@ -22,5 +22,9 @@
 18. Expose endpoints. [DONE]
 19. Separate task execution. [DONE]
 20. Require authentication to use endpoints. [DONE]
-21. Deploy solution online. [DONE] (deployed at https://sport-events.onrender.com/)
-22. Fix bug, api service changed to paid for mma.
+21. Deploy draft solution online. [DONE] (deployed at https://sport-events.onrender.com/)
+22. Reduce code duplication [DONE]
+23. Fix bug of db not being created on deploy [DONE]
+24. Review Unit Tests are still passing and app works fine locally [DONE]
+25. Deploy working solution online triggering tasks throught endpoints. [DONE]
+26. Fix bug, api service changed to paid for mma.

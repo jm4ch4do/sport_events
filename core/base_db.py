@@ -1,8 +1,5 @@
-import sqlalchemy as _alc
 from sqlalchemy import orm as _alc_orm
-from sqlalchemy.ext.declarative import declarative_base
 
-DATABASE_URL = "sqlite:///sports_events.db"
 Base = _alc_orm.declarative_base()
 
 
@@ -26,8 +23,3 @@ class BaseDB(Base):
     def get_all(cls, db: _alc_orm.Session):
         """Gets all instances of the model from the database."""
         return db.query(cls).all()
-
-
-engine = _alc.create_engine(DATABASE_URL, echo=False)
-SessionLocal = _alc_orm.sessionmaker(autocommit=False, autoflush=False, bind=engine)
-Base.metadata.create_all(bind=engine)
